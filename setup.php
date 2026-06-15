@@ -35,15 +35,23 @@ if (mysqli_query($conn, $sqlPosts)) {
 // Insert default admin user if not exists
 $checkAdmin = mysqli_query($conn, "SELECT id FROM users WHERE username = 'admin'");
 if (mysqli_num_rows($checkAdmin) === 0) {
-    // In a real app, use password_hash. Here we use plaintext for "educational" vulnerability reasons (and simplicity for students).
     $insertAdmin = "INSERT INTO users (username, password) VALUES ('admin', 'password')";
     if (mysqli_query($conn, $insertAdmin)) {
         echo "Default admin user created (admin/password).<br>";
+    }
+}
+
+// Insert default victim user if not exists
+$checkVictim = mysqli_query($conn, "SELECT id FROM users WHERE username = 'victim'");
+if (mysqli_num_rows($checkVictim) === 0) {
+    $insertVictim = "INSERT INTO users (username, password) VALUES ('victim', 'victim123')";
+    if (mysqli_query($conn, $insertVictim)) {
+        echo "Default victim user created (victim/victim123).<br>";
     } else {
-        echo "Error creating admin user: " . mysqli_error($conn) . "<br>";
+        echo "Error creating victim user: " . mysqli_error($conn) . "<br>";
     }
 } else {
-    echo "Admin user already exists.<br>";
+    echo "Victim user already exists.<br>";
 }
 
 echo "<br><a href='index.php'>Go to Home</a>";
