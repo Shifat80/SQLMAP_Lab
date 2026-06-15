@@ -8,18 +8,12 @@ The attacker needs a script to receive the stolen cookies. I have created `steal
 *   **Receiver Script:** `steal.php`
 *   **Log File:** `cookies.txt` (This is where the stolen cookies will appear).
 
-**Important:** Ensure the web server has permission to write to `cookies.txt`:
-```bash
-touch cookies.txt
-chmod 777 cookies.txt
-```
-
 ---
 
 ## 2. The Attacker: Injecting the Malicious Script
 The attacker will create a new blog post containing a script that sends the viewer's cookies to the attacker's server.
 
-1.  Login as `admin` (or any user).
+1.  Login as `admin`.
 2.  Go to **New Post** (`create.php`).
 3.  In the **Content** field, paste the following payload:
 
@@ -37,27 +31,25 @@ The attacker will create a new blog post containing a script that sends the view
 ## 3. The Victim: Triggering the Attack
 Now, simulate a victim visiting the website.
 
-1.  Open a **different browser** or an **Incognito/Private window**.
-2.  Go to `http://localhost/SQLMAP_Lab/login.php` and login (if you have other users, otherwise use the admin account).
+1.  **Open a DIFFERENT browser** (e.g., if you used Chrome for the attacker, use Firefox for the victim) or use a **Private/Incognito window**.
+2.  Login as a user (or admin). **You MUST be logged in for there to be a cookie to steal.**
 3.  Go to the **Home Page** (`index.php`).
-4.  As soon as the home page loads, the victim's browser executes the hidden script. It silently sends the victim's session cookie to `steal.php`.
+4.  The hidden script runs instantly and sends the cookie to `steal.php`.
 
 ---
 
 ## 4. The Attacker: Harvesting the Cookies
-The attacker can now check the `cookies.txt` file to see the stolen data.
-
-*   Open `cookies.txt` in your editor or via terminal:
-```bash
-cat cookies.txt
-```
-
-**What you will see:**
-You will see an entry containing `PHPSESSID=...`. An attacker can use this ID to "hijack" the victim's session by manually setting their own `PHPSESSID` cookie to this value.
+Check the `cookies.txt` file in the project folder.
 
 ---
 
-## 5. Why this works
-*   **Stored XSS:** The malicious script is saved in the database.
-*   **Lack of Sanitization:** `index.php` displays the post content using `nl2br()` without using `htmlspecialchars()`, which allows `<script>` tags to run.
-*   **No Cookie Security:** The cookies are not set with the `HttpOnly` flag. If `HttpOnly` was enabled, JavaScript (`document.cookie`) would not be able to read them.
+## 5. Troubleshooting (If it's not working)
+
+*   **Check "HttpOnly":** I have explicitly disabled `HttpOnly` in `config.php`. If it still fails, check your `php.ini` for `session.cookie_httponly`.
+*   **Browser Console:** Press `F12` and go to the **Console** and **Network** tabs in the victim's browser. Look for any errors related to `steal.php`.
+*   **Empty Cookie:** If `document.cookie` shows as empty in the console, the session might not be started or the cookie is still protected by the browser.
+*   **URL Path:** Ensure the URL in your payload (`http://localhost/SQLMAP_Lab/steal.php`) exactly matches where your lab is hosted. If you are using `127.0.0.1`, use that instead of `localhost`.
+*   **File Permissions:** On Linux, make sure the folder is writable so PHP can create `cookies.txt`.
+    ```bash
+    sudo chmod 777 /var/www/html/SQLMAP_Lab
+    ```

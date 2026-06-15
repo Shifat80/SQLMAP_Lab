@@ -1,8 +1,9 @@
 <?php
 // Start session for auth and CSRF demos
-// Secure practice would be: session_start(['cookie_httponly' => true]);
-// Vulnerable practice for this lab:
-session_start();
+// In this lab, we explicitly disable HttpOnly so that JavaScript can read the cookie for the XSS demo.
+session_start([
+    'cookie_httponly' => false,
+]);
 
 $host = getenv('DB_HOST') ?: 'localhost';
 $user = getenv('DB_USER') ?: 'blog_user';

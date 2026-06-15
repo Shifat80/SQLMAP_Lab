@@ -86,7 +86,7 @@ if ($result) {
                             &middot; Updated <?php echo date('F j, Y g:i A', strtotime($post['updated_at'])); ?>
                         <?php endif; ?>
                     </div>
-                    <div class="content"><?php echo nl2br(strlen($post['content']) > 300 ? substr($post['content'], 0, 300) . '...' : $post['content']); ?></div>
+                    <div class="content"><?php echo nl2br($post['content']); ?></div>
                     <div class="actions">
                         <a href="edit.php?id=<?php echo $post['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
                         <a href="delete.php?id=<?php echo $post['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this post permanently?')">Delete</a>
