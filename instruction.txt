@@ -46,7 +46,9 @@ http://localhost/SQLMAP_Lab/index.php
 
 ---
 VULNERABILITIES TO TEST:
+See 'attack.md' and 'xssattack.md' for detailed payloads and instructions.
+
 1. SQL Injection: Use "admin' OR '1'='1" on the login page.
-2. XSS: Try putting "<script>alert('XSS')</script>" in a post title.
+2. XSS (Cookie Stealing): See xssattack.md for the advanced scenario.
 3. DOM XSS: Visit "http://localhost/SQLMAP_Lab/index.php#<img src=x onerror=alert(1)>"
 4. SQLmap: Run "sqlmap -u 'http://localhost/SQLMAP_Lab/index.php?search=test' --dbs"
