@@ -61,6 +61,21 @@ if ($result) {
             </div>
         <?php endif; ?>
 
+        <!-- Lab Debug Helper: Verify if JS can see cookies -->
+        <div id="js-cookie-status" style="padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; background: #f9f9f9; font-size: 0.8em;">
+            <b>Lab Debug:</b> Checking JavaScript cookie access...
+        </div>
+        <script>
+            const statusDiv = document.getElementById('js-cookie-status');
+            if (document.cookie) {
+                statusDiv.innerHTML = "<b>Lab Debug:</b> ✅ JavaScript CAN see cookies. (Value: " + document.cookie.substring(0, 20) + "...)";
+                statusDiv.style.color = "green";
+            } else {
+                statusDiv.innerHTML = "<b>Lab Debug:</b> ❌ JavaScript CANNOT see any cookies. (Check if you are logged in)";
+                statusDiv.style.color = "red";
+            }
+        </script>
+
         <div class="toolbar">
             <form method="GET" action="index.php" class="search-bar">
                 <input type="text" name="search" placeholder="Search posts..." value="<?php echo $search; ?>">
