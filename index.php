@@ -9,24 +9,14 @@ $msgType = $_GET['type'] ?? 'success';
 
 // Build query
 $where = '';
-$params = [];
-$types = '';
 if ($search !== '') {
-    $where = "WHERE title LIKE CONCAT('%', ?, '%') OR content LIKE CONCAT('%', ?, '%')";
-    $params = [$search, $search];
-    $types = 'ss';
+    $where = "WHERE title LIKE '%$search%' OR content LIKE '%$search%'";
 }
 
 $sql = "SELECT * FROM posts $where ORDER BY created_at $sort";
-$stmt = mysqli_prepare($conn, $sql);
-if ($stmt) {
-    if ($params) {
-        mysqli_stmt_bind_param($stmt, $types, ...$params);
-    }
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
+$result = mysqli_query($conn, $sql);
+if ($result) {
     $posts = mysqli_fetch_all($result, MYSQLI_ASSOC);
-    mysqli_stmt_close($stmt);
 } else {
     $posts = [];
 }
@@ -42,23 +32,38 @@ if ($stmt) {
 <body>
     <header>
         <div class="container">
-            <h1><a href="index.php">My Blog</a></h1>
+            <h1><a href="index.php">Vulnerable Blog</a></h1>
             <nav>
                 <a href="index.php">Home</a>
-                <a href="create.php">New Post</a>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="create.php">New Post</a>
+                    <a href="profile.php">Profile</a>
+                    <a href="logout.php">Logout (<?php echo $_SESSION['username']; ?>)</a>
+                <?php else: ?>
+                    <a href="login.php">Login</a>
+                <?php endif; ?>
             </nav>
         </div>
     </header>
     <div class="container">
+        <!-- DOM XSS Vulnerability: Reads from hash and writes directly to innerHTML -->
+        <div id="welcome" style="margin-bottom: 20px; font-style: italic; color: #555;"></div>
+        <script>
+            const welcomeDiv = document.getElementById('welcome');
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                welcomeDiv.innerHTML = "Welcome back, " + decodeURIComponent(hash) + "!";
+            }
+        </script>
         <?php if ($msg): ?>
             <div class="alert alert-<?php echo $msgType === 'error' ? 'danger' : 'success'; ?>">
-                <?php echo htmlspecialchars($msg); ?>
+                <?php echo $msg; ?>
             </div>
         <?php endif; ?>
 
         <div class="toolbar">
             <form method="GET" action="index.php" class="search-bar">
-                <input type="text" name="search" placeholder="Search posts..." value="<?php echo htmlspecialchars($search); ?>">
+                <input type="text" name="search" placeholder="Search posts..." value="<?php echo $search; ?>">
                 <button type="submit" class="btn btn-primary">Search</button>
                 <?php if ($search !== ''): ?>
                     <a href="index.php?sort=<?php echo $sort; ?>" class="btn btn-sm btn-warning">Clear</a>
@@ -74,14 +79,14 @@ if ($stmt) {
         <?php if (count($posts) > 0): ?>
             <?php foreach ($posts as $post): ?>
                 <div class="card post">
-                    <h3><a href="edit.php?id=<?php echo $post['id']; ?>"><?php echo htmlspecialchars($post['title']); ?></a></h3>
+                    <h3><a href="edit.php?id=<?php echo $post['id']; ?>"><?php echo $post['title']; ?></a></h3>
                     <div class="meta">
                         Posted on <?php echo date('F j, Y g:i A', strtotime($post['created_at'])); ?>
                         <?php if ($post['updated_at'] !== $post['created_at']): ?>
                             &middot; Updated <?php echo date('F j, Y g:i A', strtotime($post['updated_at'])); ?>
                         <?php endif; ?>
                     </div>
-                    <div class="content"><?php echo nl2br(htmlspecialchars(strlen($post['content']) > 300 ? substr($post['content'], 0, 300) . '...' : $post['content'])); ?></div>
+                    <div class="content"><?php echo nl2br(strlen($post['content']) > 300 ? substr($post['content'], 0, 300) . '...' : $post['content']); ?></div>
                     <div class="actions">
                         <a href="edit.php?id=<?php echo $post['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
                         <a href="delete.php?id=<?php echo $post['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this post permanently?')">Delete</a>

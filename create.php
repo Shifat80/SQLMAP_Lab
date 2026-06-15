@@ -1,6 +1,11 @@
 <?php
 require __DIR__ . '/config.php';
 
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php?msg=Please+login+to+create+posts&type=error");
+    exit;
+}
+
 $title = '';
 $content = '';
 $error = '';
@@ -12,20 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($title === '' || $content === '') {
         $error = 'Please fill in all fields.';
     } else {
-        $stmt = mysqli_prepare($conn, "INSERT INTO posts (title, content) VALUES (?, ?)");
-        if ($stmt) {
-            mysqli_stmt_bind_param($stmt, "ss", $title, $content);
-            if (mysqli_stmt_execute($stmt)) {
-                $newId = mysqli_insert_id($conn);
-                mysqli_stmt_close($stmt);
-                header("Location: index.php?msg=" . urlencode('Post published successfully') . "&type=success");
-                exit;
-            } else {
-                $error = 'Failed to create post. Please try again.';
-            }
-            mysqli_stmt_close($stmt);
+        $sql = "INSERT INTO posts (title, content) VALUES ('$title', '$content')";
+        if (mysqli_query($conn, $sql)) {
+            $newId = mysqli_insert_id($conn);
+            header("Location: index.php?msg=" . urlencode('Post published successfully') . "&type=success");
+            exit;
         } else {
-            $error = 'Database error. Please try again.';
+            $error = 'Failed to create post. Please try again: ' . mysqli_error($conn);
         }
     }
 }
@@ -52,16 +50,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="card">
             <h2>Create New Post</h2>
             <?php if ($error): ?>
-                <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+                <div class="alert alert-danger"><?php echo $error; ?></div>
             <?php endif; ?>
             <form method="POST">
                 <div class="form-group">
                     <label for="title">Title</label>
-                    <input type="text" name="title" id="title" required value="<?php echo htmlspecialchars($title); ?>" placeholder="Enter post title">
+                    <input type="text" name="title" id="title" required value="<?php echo $title; ?>" placeholder="Enter post title">
                 </div>
                 <div class="form-group">
                     <label for="content">Content</label>
-                    <textarea name="content" id="content" rows="12" required placeholder="Write your post content here..."><?php echo htmlspecialchars($content); ?></textarea>
+                    <textarea name="content" id="content" rows="12" required placeholder="Write your post content here..."><?php echo $content; ?></textarea>
                 </div>
                 <div style="display:flex;gap:10px;">
                     <button type="submit" class="btn btn-success">Publish Post</button>

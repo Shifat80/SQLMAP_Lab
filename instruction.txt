@@ -1,0 +1,52 @@
+# Instructions to Run the Vulnerable Lab on Kali Linux
+
+Follow these steps to set up the environment and run the application on your Kali Linux VM.
+
+## 1. Move Files to Web Root
+If you haven't already, move the project folder to the Apache web root:
+sudo mv SQLMAP_Lab /var/www/html/
+cd /var/www/html/SQLMAP_Lab
+
+## 2. Install Prerequisites
+Ensure Apache, MariaDB, and PHP are installed:
+sudo apt update
+sudo apt install apache2 mariadb-server php php-mysqli -y
+
+## 3. Start Services
+sudo systemctl start apache2
+sudo systemctl start mariadb
+sudo systemctl enable apache2
+sudo systemctl enable mariadb
+
+## 4. Database Configuration
+Login to MariaDB to create the database and user that matches the app's 'config.php':
+sudo mysql -u root
+
+Once inside the MariaDB prompt, run these commands:
+CREATE DATABASE blog_app;
+CREATE USER 'blog_user'@'localhost' IDENTIFIED BY 'blog_pass_2024';
+GRANT ALL PRIVILEGES ON blog_app.* TO 'blog_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+
+## 5. Set Permissions
+Ensure the web server has permission to read the files:
+sudo chown -R www-data:www-data /var/www/html/SQLMAP_Lab
+sudo chmod -R 755 /var/www/html/SQLMAP_Lab
+
+## 6. Initialize the Lab
+Open your web browser and go to:
+http://localhost/SQLMAP_Lab/setup.php
+
+This script will automatically create the 'users' and 'posts' tables and the default admin account.
+
+## 7. Start Testing!
+Once the setup script finishes, go to:
+http://localhost/SQLMAP_Lab/index.php
+
+---
+VULNERABILITIES TO TEST:
+1. SQL Injection: Use "admin' OR '1'='1" on the login page.
+2. XSS: Try putting "<script>alert('XSS')</script>" in a post title.
+3. DOM XSS: Visit "http://localhost/SQLMAP_Lab/index.php#<img src=x onerror=alert(1)>"
+4. SQLmap: Run "sqlmap -u 'http://localhost/SQLMAP_Lab/index.php?search=test' --dbs"

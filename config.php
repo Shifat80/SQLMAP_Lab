@@ -1,4 +1,9 @@
 <?php
+// Start session for auth and CSRF demos
+// Secure practice would be: session_start(['cookie_httponly' => true]);
+// Vulnerable practice for this lab:
+session_start();
+
 $host = getenv('DB_HOST') ?: 'localhost';
 $user = getenv('DB_USER') ?: 'blog_user';
 $pass = getenv('DB_PASS') ?: 'blog_pass_2024';
