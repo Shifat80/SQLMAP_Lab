@@ -13,11 +13,13 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $content = trim($_POST['content'] ?? '');
+    $user_id = $_SESSION['user_id'];
 
     if ($title === '' || $content === '') {
         $error = 'Please fill in all fields.';
     } else {
-        $sql = "INSERT INTO posts (title, content) VALUES ('$title', '$content')";
+        // VULNERABLE: SQL Injection still present (for lab purposes)
+        $sql = "INSERT INTO posts (user_id, title, content) VALUES ('$user_id', '$title', '$content')";
         if (mysqli_query($conn, $sql)) {
             $newId = mysqli_insert_id($conn);
             header("Location: index.php?msg=" . urlencode('Post published successfully') . "&type=success");

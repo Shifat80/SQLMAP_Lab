@@ -17,13 +17,15 @@ if (mysqli_query($conn, $sqlUsers)) {
     echo "Error creating table 'users': " . mysqli_error($conn) . "<br>";
 }
 
-// Create posts table (ensure it exists)
+// Create posts table with user_id for ownership
 $sqlPosts = "CREATE TABLE IF NOT EXISTS posts (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL DEFAULT 1,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 )";
 
 if (mysqli_query($conn, $sqlPosts)) {
@@ -52,6 +54,29 @@ if (mysqli_num_rows($checkVictim) === 0) {
     }
 } else {
     echo "Victim user already exists.<br>";
+}
+
+// Insert shifat user (the attacker) if not exists
+$checkShifat = mysqli_query($conn, "SELECT id FROM users WHERE username = 'shifat'");
+if (mysqli_num_rows($checkShifat) === 0) {
+    $insertShifat = "INSERT INTO users (username, password) VALUES ('shifat', '1234')";
+    if (mysqli_query($conn, $insertShifat)) {
+        echo "Attacker user 'shifat' created (shifat/1234).<br>";
+    } else {
+        echo "Error creating shifat user: " . mysqli_error($conn) . "<br>";
+    }
+} else {
+    echo "Shifat user already exists.<br>";
+}
+
+// Add default posts if none exist
+$checkPosts = mysqli_query($conn, "SELECT COUNT(*) as count FROM posts");
+$row = mysqli_fetch_assoc($checkPosts);
+if ($row['count'] == 0) {
+    $insertPost = "INSERT INTO posts (user_id, title, content) VALUES (2, 'Welcome to the Blog', 'This is a sample post created by victim.')";
+    if (mysqli_query($conn, $insertPost)) {
+        echo "Default post created by victim.<br>";
+    }
 }
 
 echo "<br><a href='index.php'>Go to Home</a>";

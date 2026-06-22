@@ -13,7 +13,8 @@ if ($search !== '') {
     $where = "WHERE title LIKE '%$search%' OR content LIKE '%$search%'";
 }
 
-$sql = "SELECT * FROM posts $where ORDER BY created_at $sort";
+// Join with users to get owner username
+$sql = "SELECT p.*, u.username as owner_name FROM posts p JOIN users u ON p.user_id = u.id $where ORDER BY p.created_at $sort";
 $result = mysqli_query($conn, $sql);
 if ($result) {
     $posts = mysqli_fetch_all($result, MYSQLI_ASSOC);
@@ -96,7 +97,7 @@ if ($result) {
                 <div class="card post">
                     <h3><a href="edit.php?id=<?php echo $post['id']; ?>"><?php echo $post['title']; ?></a></h3>
                     <div class="meta">
-                        Posted on <?php echo date('F j, Y g:i A', strtotime($post['created_at'])); ?>
+                        Posted by <strong><?php echo $post['owner_name']; ?></strong> on <?php echo date('F j, Y g:i A', strtotime($post['created_at'])); ?>
                         <?php if ($post['updated_at'] !== $post['created_at']): ?>
                             &middot; Updated <?php echo date('F j, Y g:i A', strtotime($post['updated_at'])); ?>
                         <?php endif; ?>

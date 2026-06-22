@@ -8,6 +8,8 @@ if (!isset($_SESSION['user_id'])) {
 
 $id = $_GET['id'] ?? '';
 $error = '';
+$current_user_id = $_SESSION['user_id'];
+$current_username = $_SESSION['username'];
 
 // Fetch existing post
 $sql = "SELECT * FROM posts WHERE id = '$id'";
@@ -17,6 +19,12 @@ $post = mysqli_fetch_assoc($result);
 if (!$post) {
     header("Location: index.php?msg=" . urlencode('Post not found: ' . mysqli_error($conn)) . "&type=error");
     exit;
+}
+
+// VULNERABLE: Authorization check that can be bypassed via CSRF
+// Shifat cannot directly edit victim's posts, but can force victim to do it via CSRF
+if ($current_username === 'shifat' && $post['user_id'] != $current_user_id) {
+    $error = "Access Denied: You cannot edit posts that belong to other users. (Hint: Try a CSRF attack to bypass this!)";
 }
 
 $title = $post['title'];
@@ -29,6 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($title === '' || $content === '') {
         $error = 'Please fill in all fields.';
     } else {
+        // VULNERABLE: No CSRF token - any logged-in user can be forced to submit this
+        // Also SQL Injection vulnerable
         $sql = "UPDATE posts SET title = '$title', content = '$content' WHERE id = '$id'";
         if (mysqli_query($conn, $sql)) {
             header("Location: index.php?msg=" . urlencode('Post updated successfully') . "&type=success");
@@ -63,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php if ($error): ?>
                 <div class="alert alert-danger"><?php echo $error; ?></div>
             <?php endif; ?>
-            <form method="POST">
+            <form method="POST" id="edit-form">
                 <div class="form-group">
                     <label for="title">Title</label>
                     <input type="text" name="title" id="title" required value="<?php echo $title; ?>" placeholder="Enter post title">
