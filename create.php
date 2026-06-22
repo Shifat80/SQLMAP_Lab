@@ -10,6 +10,10 @@ $title = '';
 $content = '';
 $error = '';
 
+// Check if user_id column exists
+$checkCol = mysqli_query($conn, "SHOW COLUMNS FROM posts LIKE 'user_id'");
+$has_user_id = mysqli_num_rows($checkCol) > 0;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $content = trim($_POST['content'] ?? '');
@@ -18,8 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($title === '' || $content === '') {
         $error = 'Please fill in all fields.';
     } else {
-        // VULNERABLE: SQL Injection still present (for lab purposes)
-        $sql = "INSERT INTO posts (user_id, title, content) VALUES ('$user_id', '$title', '$content')";
+        if ($has_user_id) {
+            $sql = "INSERT INTO posts (user_id, title, content) VALUES ('$user_id', '$title', '$content')";
+        } else {
+            $sql = "INSERT INTO posts (title, content) VALUES ('$title', '$content')";
+        }
         if (mysqli_query($conn, $sql)) {
             $newId = mysqli_insert_id($conn);
             header("Location: index.php?msg=" . urlencode('Post published successfully') . "&type=success");

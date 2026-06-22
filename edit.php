@@ -17,13 +17,17 @@ $result = mysqli_query($conn, $sql);
 $post = mysqli_fetch_assoc($result);
 
 if (!$post) {
-    header("Location: index.php?msg=" . urlencode('Post not found: ' . mysqli_error($conn)) . "&type=error");
+    header("Location: index.php?msg=" . urlencode('Post not found') . "&type=error");
     exit;
 }
 
+// Check if user_id column exists
+$checkCol = mysqli_query($conn, "SHOW COLUMNS FROM posts LIKE 'user_id'");
+$has_user_id = mysqli_num_rows($checkCol) > 0;
+
 // VULNERABLE: Authorization check that can be bypassed via CSRF
 // Shifat cannot directly edit victim's posts, but can force victim to do it via CSRF
-if ($current_username === 'shifat' && $post['user_id'] != $current_user_id) {
+if ($has_user_id && $current_username === 'shifat' && $post['user_id'] != $current_user_id) {
     $error = "Access Denied: You cannot edit posts that belong to other users. (Hint: Try a CSRF attack to bypass this!)";
 }
 

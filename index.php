@@ -13,13 +13,24 @@ if ($search !== '') {
     $where = "WHERE title LIKE '%$search%' OR content LIKE '%$search%'";
 }
 
-// Join with users to get owner username
-$sql = "SELECT p.*, u.username as owner_name FROM posts p JOIN users u ON p.user_id = u.id $where ORDER BY p.created_at $sort";
+// Check if user_id column exists for backward compatibility
+$checkCol = mysqli_query($conn, "SHOW COLUMNS FROM posts LIKE 'user_id'");
+$has_user_id = mysqli_num_rows($checkCol) > 0;
+
+if ($has_user_id) {
+    // Join with users to get owner username
+    $sql = "SELECT p.*, u.username as owner_name FROM posts p LEFT JOIN users u ON p.user_id = u.id $where ORDER BY p.created_at $sort";
+} else {
+    // Fallback to old query without user_id
+    $sql = "SELECT * FROM posts $where ORDER BY created_at $sort";
+}
+
 $result = mysqli_query($conn, $sql);
 if ($result) {
     $posts = mysqli_fetch_all($result, MYSQLI_ASSOC);
 } else {
     $posts = [];
+    echo "<div style='color:red; padding:10px;'>Database Error: " . mysqli_error($conn) . "</div>";
 }
 ?>
 <!DOCTYPE html>
@@ -97,7 +108,11 @@ if ($result) {
                 <div class="card post">
                     <h3><a href="edit.php?id=<?php echo $post['id']; ?>"><?php echo $post['title']; ?></a></h3>
                     <div class="meta">
-                        Posted by <strong><?php echo $post['owner_name']; ?></strong> on <?php echo date('F j, Y g:i A', strtotime($post['created_at'])); ?>
+                        <?php if ($has_user_id && isset($post['owner_name'])): ?>
+                            Posted by <strong><?php echo $post['owner_name']; ?></strong> on <?php echo date('F j, Y g:i A', strtotime($post['created_at'])); ?>
+                        <?php else: ?>
+                            Posted on <?php echo date('F j, Y g:i A', strtotime($post['created_at'])); ?>
+                        <?php endif; ?>
                         <?php if ($post['updated_at'] !== $post['created_at']): ?>
                             &middot; Updated <?php echo date('F j, Y g:i A', strtotime($post['updated_at'])); ?>
                         <?php endif; ?>

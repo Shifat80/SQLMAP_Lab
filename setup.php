@@ -17,21 +17,32 @@ if (mysqli_query($conn, $sqlUsers)) {
     echo "Error creating table 'users': " . mysqli_error($conn) . "<br>";
 }
 
-// Create posts table with user_id for ownership
+// Create posts table (if not exists)
 $sqlPosts = "CREATE TABLE IF NOT EXISTS posts (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL DEFAULT 1,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )";
 
 if (mysqli_query($conn, $sqlPosts)) {
     echo "Table 'posts' created successfully.<br>";
 } else {
     echo "Error creating table 'posts': " . mysqli_error($conn) . "<br>";
+}
+
+// Add user_id column to posts if it doesn't exist (backward compatibility)
+$checkCol = mysqli_query($conn, "SHOW COLUMNS FROM posts LIKE 'user_id'");
+if (mysqli_num_rows($checkCol) === 0) {
+    $alterSql = "ALTER TABLE posts ADD COLUMN user_id INT NOT NULL DEFAULT 1";
+    if (mysqli_query($conn, $alterSql)) {
+        echo "Column 'user_id' added to posts table.<br>";
+    } else {
+        echo "Error adding user_id column: " . mysqli_error($conn) . "<br>";
+    }
+} else {
+    echo "Column 'user_id' already exists.<br>";
 }
 
 // Insert default admin user if not exists
@@ -41,6 +52,8 @@ if (mysqli_num_rows($checkAdmin) === 0) {
     if (mysqli_query($conn, $insertAdmin)) {
         echo "Default admin user created (admin/password).<br>";
     }
+} else {
+    echo "Admin user already exists.<br>";
 }
 
 // Insert default victim user if not exists
@@ -77,6 +90,8 @@ if ($row['count'] == 0) {
     if (mysqli_query($conn, $insertPost)) {
         echo "Default post created by victim.<br>";
     }
+} else {
+    echo "Posts already exist.<br>";
 }
 
 echo "<br><a href='index.php'>Go to Home</a>";

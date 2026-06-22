@@ -5,6 +5,10 @@ session_start([
     'cookie_httponly' => false,
 ]);
 
+// Enable error reporting for debugging (remove in production)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 $host = getenv('DB_HOST') ?: 'localhost';
 $user = getenv('DB_USER') ?: 'blog_user';
 $pass = getenv('DB_PASS') ?: 'blog_pass_2024';
