@@ -17,7 +17,7 @@ $sql = "SELECT id FROM posts WHERE id = '$id'";
 $result = mysqli_query($conn, $sql);
 
 if (mysqli_num_rows($result) === 0) {
-    header("Location: index.php?msg=" . urlencode('Post not found: ' . mysqli_error($conn)) . "&type=error");
+    header("Location: index.php?msg=" . urlencode('Post not found') . "&type=error");
     exit;
 }
 
@@ -26,7 +26,8 @@ $deleted = mysqli_query($conn, $sql);
 
 if ($deleted) {
     header("Location: index.php?msg=" . urlencode('Post deleted successfully') . "&type=success");
+    exit;
 } else {
     header("Location: index.php?msg=" . urlencode('Failed to delete post: ' . mysqli_error($conn)) . "&type=error");
+    exit;
 }
-exit;
